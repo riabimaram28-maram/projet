@@ -1,0 +1,36 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: AppEvent
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/iset_events_db
+    username: postgres
+    password: maram
+    driver-class-name: org.postgresql.Driver
+    
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        
+  sql:
+    init:
+      mode: never
+
+# JWT Configuration
+jwt:
+  secret: mySecretKey123456789012345678901234567890
+  expiration: 86400000 # 24 hours in milliseconds
+
+# Logging
+logging:
+  level:
+    tn.iset.AppEvent: DEBUG
+    org.springframework.security: DEBUG
