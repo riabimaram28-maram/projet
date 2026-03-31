@@ -1,11 +1,16 @@
 package tn.iset.AppEvent.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import tn.iset.AppEvent.dto.ChangeRoleRequest;
+import tn.iset.AppEvent.dto.ResetPasswordRequest;
+import tn.iset.AppEvent.dto.UpdateUserRequest;
 import tn.iset.AppEvent.model.User;
 import tn.iset.AppEvent.repository.UserRepository;
+import tn.iset.AppEvent.service.UserService;
 
 import java.util.HashMap;
 import java.util.List;
@@ -18,9 +23,11 @@ import java.util.Optional;
 public class UserController {
     
     private final UserRepository userRepository;
+    private final UserService userService;
     
-    public UserController(UserRepository userRepository) {
+    public UserController(UserRepository userRepository, UserService userService) {
         this.userRepository = userRepository;
+        this.userService = userService;
     }
     
     @GetMapping("/profile")
@@ -71,14 +78,59 @@ public class UserController {
         return ResponseEntity.ok(userProfiles);
     }
     
-    @GetMapping("/count")
+    @GetMapping("/statistics")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> getUserCount() {
-        long totalUsers = userRepository.count();
-        Map<String, Object> stats = new HashMap<>();
-        stats.put("totalUsers", totalUsers);
-        stats.put("message", "Statistiques des utilisateurs");
-        
-        return ResponseEntity.ok(stats);
+    public ResponseEntity<?> getUserStatistics() {
+        return ResponseEntity.ok(userService.getUserStatistics());
+    }
+    
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @Valid @RequestBody UpdateUserRequest updateUserRequest) {
+        try {
+            return ResponseEntity.ok(userService.updateUser(id, updateUserRequest));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    
+    @PatchMapping("/{id}/role")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> changeUserRole(@PathVariable Long id, @Valid @RequestBody ChangeRoleRequest changeRoleRequest, Authentication authentication) {
+        try {
+            return ResponseEntity.ok(userService.changeUserRole(id, changeRoleRequest, authentication.getName()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    
+    @PostMapping("/reset-password")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> resetUserPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest, Authentication authentication) {
+        try {
+            return ResponseEntity.ok(userService.resetUserPassword(resetPasswordRequest, authentication.getName()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> deleteUser(@PathVariable Long id, Authentication authentication) {
+        try {
+            return ResponseEntity.ok(userService.deleteUser(id, authentication.getName()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    
+    @PatchMapping("/{id}/toggle-status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> toggleUserStatus(@PathVariable Long id, Authentication authentication) {
+        try {
+            return ResponseEntity.ok(userService.toggleUserStatus(id, authentication.getName()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }
